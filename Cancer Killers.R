@@ -1,29 +1,35 @@
+###############
+### Protein ###
+###############
+
+### Loading in Libraries
 library(tidyverse)
 library(DataExplorer)
 library(caret)
 
-test <- read.csv("test.csv")
-train <- read.csv("train.csv")
-
+### Reading in Data
 protein.all <- bind_rows(read_csv("train.csv"), read_csv("test.csv"))
 
 plot_missing(protein.all)
-View(protein.all[is.na(protein.all$Consensus), c("Consensus", "PSSM")])
+
+sum(is.na(protein.all$Consensus) == is.na(protein.all$PSSM))
+View(protein.all[is.na(protein.all$Consensus),c("Consensus", "PSSM")])
 
 
 corrgram::corrgram(protein.all[!is.na(protein.all$Consensus),])
 
 # EDA
-GGally::ggpairs(protein.all[!is.na(protein.all$Consensus),-9]
+GGally::ggpairs(protein.all[!is.na(protein.all$Consensus),-9])
 
-protein.all[!is.na(protein.all$Consensus), -9] %>% ggplot() + geom_density(aes(x=PSSM, color = Response))              
+protein.all[!is.na(protein.all$Response),-9] %>% ggplot() + geom_density(aes(x = PSSM, color = as.factor(Response)))
 
 # Linear Regression Imputation for Consensus
-protein.lm <- lm(Consensus ~ SVM, data = protein.all)
-protein.all$Consensus[is.na(protein.all$Consensus)] <- predict.lm(protein.lm, newdata = protein.all[is.na(protein.all$Consensus),])
+protein.consensus.lm <- lm(Consensus ~ SVM, data = protein.all)
+protein.all$Consensus[is.na(protein.all$Consensus)] <- predict.lm(protein.consensus.lm, newdata = protein.all[is.na(protein.all$Consensus),])
 
-# Linear Regression Imputation for OSSM
+# Linear Regression Imputation for
 protein.pssm.lm <- lm(PSSM ~ SVM + ANN + Consensus, data = protein.all)
 protein.all$PSSM[is.na(protein.all$PSSM)] <- predict.lm(protein.pssm.lm, newdata = protein.all[is.na(protein.all$PSSM),])
 
 plot_missing(protein.all)
+
