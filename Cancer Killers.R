@@ -33,3 +33,23 @@ protein.all$PSSM[is.na(protein.all$PSSM)] <- predict.lm(protein.pssm.lm, newdata
 
 plot_missing(protein.all)
 
+### Training Model ###
+
+library(e1071)
+library(ranger)
+library(dplyr)
+
+
+train.model <- train(form = as.factor(Response)~., 
+                     data = protein.all %>% filter(!is.na(Response)),
+                     method = 'ranger',
+                     trControl = trainControl(method = 'repeatedcv',
+                                              number = 10,
+                                              repeats = 3)
+                     )
+
+plot(train.model)
+
+boost.preds <- data.frame(Id = protein.all %>% filter(is.na(Response)) %>% select(SiteNum) %>% pull, 
+                          Predicted=predict(train.model, newdata=dplyr::filter(protein.all,is.na(Response))))
+write_csv(x=boost.preds, path="./BoostPredictionsBenAnderson.csv")
