@@ -52,4 +52,5 @@ plot(train.model)
 
 boost.preds <- data.frame(Id = protein.all %>% filter(is.na(Response)) %>% select(SiteNum) %>% pull, 
                           Predicted=predict(train.model, newdata=dplyr::filter(protein.all,is.na(Response))))
-write_csv(x=boost.preds, path="./BoostPredictionsBenAnderson.csv")
+boost.preds$Predicted <- ifelse(boost.preds$Predicted == 1, TRUE, FALSE)
+write_csv(x=boost.preds, path="./TFBoostPredictionsBenAnderson.csv")
